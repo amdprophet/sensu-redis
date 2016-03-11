@@ -38,7 +38,7 @@ module Sensu
         when ASTERISK # Array, e.g. *2\r\n$3\r\foo\r\n$3\r\nbar\r\n
           multibulk_count = Integer(response)
           if multibulk_count == -1 || multibulk_count == 0 # No data, return [].
-            dispatch_response(EMPTY_ARRAY)
+            dispatch_response([])
           else
             begin_multibulk(multibulk_count) # Accumulate responses.
           end

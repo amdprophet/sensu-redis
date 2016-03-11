@@ -13,9 +13,6 @@ module Sensu
     # Redis response line parser incomplete data return value.
     INCOMPLETE = "incomp".freeze
 
-    # Used to return empty array reponses.
-    EMPTY_ARRAY = [].freeze
-
     # Redis response boolean values.
     TRUE_VALUES = %w[1 OK].freeze
 
@@ -45,6 +42,7 @@ module Sensu
       "lpush",
       "ltrim",
       "lrange",
+      "llen",
       "exists",
       "ttl",
       "expire",
@@ -70,6 +68,7 @@ module Sensu
     # Redis response value processors.
     RESPONSE_PROCESSORS = {
       "exists" => BOOLEAN_PROCESSOR,
+      "sismember" => BOOLEAN_PROCESSOR,
       "sadd" => BOOLEAN_PROCESSOR,
       "srem" => BOOLEAN_PROCESSOR,
       "setnx" => BOOLEAN_PROCESSOR,
