@@ -1,8 +1,13 @@
 module Sensu
   module Redis
+    # Error class for Redis connection errors.
+    class ConnectionError < StandardError; end
+
+    # Error class for Redis protocol (RESP) errors.
     class ProtocolError < StandardError; end
 
-    class Error < StandardError
+    # Error class for Redis command errors.
+    class CommandError < StandardError
       attr_accessor :code
 
       def initialize(*args)

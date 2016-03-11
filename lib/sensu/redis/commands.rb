@@ -3,7 +3,9 @@ require "sensu/redis/errors"
 
 module Sensu
   module Redis
-    # Sensu Module for requesting Redis commands.
+    # Sensu Module for requesting Redis commands, intended to be
+    # included by Sensu::Redis::Client.
+    #
     # You can read about RESP @ http://redis.io/topics/protocol
     module Commands
       # Determine the byte size of a string.
@@ -24,47 +26,64 @@ module Sensu
           value = value.to_s
           command << "$#{get_size(value)}#{DELIM}#{value}#{DELIM}"
         end
-        send_data(command)
+        if @deferred_status
+          send_data(command)
+        else
+          callback { send_data(command) }
+        end
       end
 
       # Create Redis command methods. Command methods just wrap
       # `send_command()` and enqueue a response callback. This method
       # MUST be called in the connection object's `initialize()`.
-      def self.create_command_methods
+      def create_command_methods!
         @response_callbacks ||= []
         REDIS_COMMANDS.each do |command|
-          define_method(command.to_sym) do |*arguments, &callback|
+          self.class.send(:define_method, command.to_sym) do |*arguments, &block|
             send_command(command, *arguments)
-            @response_callbacks << [RESPONSE_PROCESSORS[command], callback]
+            @response_callbacks << [RESPONSE_PROCESSORS[command], block]
           end
         end
       end
 
-      def select(db, &callback)
-        @db = db.to_i
-        send_command(['select', @db], &callback)
+      # Authenticate to Redis and select the correct DB, when
+      # applicable. The auth and select Redis commands must be the
+      # first commands (& callbacks) to run.
+      #
+      # @param password [String]
+      # @param db [Integer]
+      def auth_and_select_db(password=nil, db=nil)
+        callbacks = @callbacks || []
+        @callbacks = []
+        send_command(AUTH_COMMAND, password) if password
+        send_command(SELECT_COMMAND, db) if db
+        callbacks.each { |block| callback &block }
       end
 
-      def auth(password, &callback)
-        @password = password
-        send_command(['auth', password], &callback)
-      end
-
-      def subscribe(channel, &callback)
+      # Subscribe to a Redis PubSub channel.
+      #
+      # @param channel [String]
+      def subscribe(channel, &block)
         @pubsub_callbacks ||= Hash.new([])
-        @pubsub_callbacks[channel] << callback
-        send_command(['subscribe', channel], &callback)
+        @pubsub_callbacks[channel] << block
+        send_command(SUBSCRIBE_COMMAND, channel, &block)
       end
 
-      def unsubscribe(channel=nil, &callback)
+      # Unsubscribe to one or more Redis PubSub channels. If a channel
+      # is provided, this method will unsubscribe from it. If a
+      # channel is not provided, this method will unsubscribe from all
+      # Redis PubSub channels.
+      #
+      # @param channel [String]
+      def unsubscribe(channel=nil, &block)
         @pubsub_callbacks ||= Hash.new([])
-        arguments = ["unsubscribe"]
+        arguments = [UNSUBSCRIBE_COMMAND]
         if channel
-          @pubsub_callbacks[channel] = [callback]
+          @pubsub_callbacks[channel] = [block]
           arguments << channel
         else
           @pubsub_callbacks.each_key do |key|
-            @pubsub_callbacks[key] = [callback]
+            @pubsub_callbacks[key] = [block]
           end
         end
         send_command(arguments)

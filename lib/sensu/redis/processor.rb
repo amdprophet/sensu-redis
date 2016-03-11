@@ -4,10 +4,12 @@ require "sensu/redis/errors"
 module Sensu
   module Redis
     # Sensu Module for processing Redis responses.
+    # This module calls methods provided by other Sensu Redis modules:
+    #   Sensu::Redis::Connection.error()
     module Processor
       # Fetch the next Redis command response callback. Response
       # callbacks may include an optional response processor block,
-      # i.e. "1" -> false.
+      # i.e. "1" -> true.
       #
       # @return [Array] processor, callback.
       def fetch_response_callback
@@ -15,10 +17,11 @@ module Sensu
         @response_callbacks.shift
       end
 
-      # Begin a multibulk response array for an expected number of
+      # Begin a multi bulk response array for an expected number of
       # responses. Using this method causes `dispatch_response()` to
       # wait until all of the expected responses have been added to
-      # the array, before calling the Redis command reponse callback.
+      # the array, before the Redis command reponse callback is
+      # called.
       #
       # @param multibulk_count [Integer] number of expected responses.
       def begin_multibulk(multibulk_count)
@@ -26,23 +29,14 @@ module Sensu
         @multibulk_values = []
       end
 
-      # Create an exception and pass it to the error callback if set.
-      #
-      # @param klass [Class]
-      # @param message [String]
-      def error(klass, message)
-        exception = klass.new(message)
-        @error_callback.call(exception) if @error_callback
-      end
-
       # Dispatch a Redis error, dropping the associated Redis command
-      # response callback, and passing a Redis error exception to the
+      # response callback, and passing a Redis error object to the
       # error callback (if set).
       #
       # @param code [String] Redis error code.
       def dispatch_error(code)
         fetch_response_callback
-        error(Sensu::Redis::Error, code)
+        error(CommandError, code)
       end
 
       # Dispatch a response. If a multi bulk response has begun, this
@@ -68,15 +62,17 @@ module Sensu
         end
         if @pubsub_callbacks && value.is_a?(Array)
           if PUBSUB_RESPONSES.include?(value[0])
-            @pubsub_callbacks[value[1]].each do |callback|
-              callback.call(*value) if callback
+            @pubsub_callbacks[value[1]].each do |block|
+              block.call(*value) if block
             end
             return
           end
         end
-        processor, callback = fetch_response_callback
-        value = processor.call(value) if processor
-        callback.call(value) if callback
+        processor, block = fetch_response_callback
+        if block
+          value = processor.call(value) if processor
+          block.call(value)
+        end
       end
     end
   end

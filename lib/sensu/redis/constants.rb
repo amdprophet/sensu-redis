@@ -1,5 +1,7 @@
 module Sensu
   module Redis
+    # RESP (REdis Serialization Protocol) response type characters and
+    # delimiter (http://redis.io/topics/protocol).
     OK = "OK".freeze
     MINUS = "-".freeze
     PLUS = "+".freeze
@@ -8,22 +10,42 @@ module Sensu
     ASTERISK = "*".freeze
     DELIM = "\r\n".freeze
 
+    # Redis response line parser incomplete data return value.
     INCOMPLETE = "incomp".freeze
 
+    # Used to return empty array reponses.
     EMPTY_ARRAY = [].freeze
 
+    # Redis response boolean values.
     TRUE_VALUES = %w[1 OK].freeze
 
+    # Redis pubsub response type values.
     PUBSUB_RESPONSES = %w[message unsubscribe].freeze
 
+    # Redis commands that are supported by this library.
     REDIS_COMMANDS = [
       "set",
       "get",
-      "del"
+      "del",
+      "info"
     ].freeze
 
-    BOOLEAN_PROCESSOR = lambda{|r| %w[1 OK].include?(r.to_s)}
+    # Redis DB select command.
+    SELECT_COMMAND = "select".freeze
 
+    # Redis authentication command.
+    AUTH_COMMAND = "auth".freeze
+
+    # Redis PubSub subscribe command.
+    SUBSCRIBE_COMMAND = "subscribe".freeze
+
+    # Redis PubSub unsubscribe command.
+    UNSUBSCRIBE_COMMAND = "unsubscribe".freeze
+
+    # Boolean Redis response value processor.
+    BOOLEAN_PROCESSOR = lambda{|r| TRUE_VALUES.include?(r.to_s)}
+
+    # Redis response value processors.
     RESPONSE_PROCESSORS = {
       "exists" => BOOLEAN_PROCESSOR,
       "sadd" => BOOLEAN_PROCESSOR,

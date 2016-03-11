@@ -9,7 +9,7 @@ module Sensu
     #   Sensu::Redis::Processor.dispatch_error()
     #   Sensu::Redis::Processor.dispatch_response()
     #   Sensu::Redis::Processor.begin_multibulk()
-    #   Sensu::Redis::Processor.error()
+    #   Sensu::Redis::Connection.error()
     module Parser
       # Parse a RESP line.
       #
@@ -43,11 +43,12 @@ module Sensu
             begin_multibulk(multibulk_count) # Accumulate responses.
           end
         else
-          error(Sensu::Redis::ProtocolError, "response type not recognized: #{line.strip}")
+          error(ProtocolError, "response type not recognized: #{line.strip}")
         end
       end
 
-      # EM connection receive data, parse incoming data using RESP.
+      # EM connection receive data, parse incoming data using RESP
+      # (`parse_line()`).
       #
       # @param data [String]
       def receive_data(data)
