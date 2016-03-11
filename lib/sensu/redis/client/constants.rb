@@ -48,7 +48,9 @@ module Sensu
       "ttl",
       "expire",
       "flushdb",
-      "incr"
+      "incr",
+      "multi",
+      "exec"
     ].freeze
 
     # Redis commands.
