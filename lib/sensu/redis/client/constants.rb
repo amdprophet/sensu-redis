@@ -20,7 +20,7 @@ module Sensu
     PUBSUB_RESPONSES = %w[message unsubscribe].freeze
 
     # Redis commands that are supported by this library.
-    REDIS_COMMANDS = [
+    COMMANDS = [
       "set",
       "setnx",
       "get",
