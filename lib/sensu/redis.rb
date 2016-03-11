@@ -30,8 +30,11 @@ module Sensu
         end
 
         def connect(options={})
-          if options.is_a?(String)
+          case options
+          when String
             options = parse_url(options)
+          when nil
+            options = {}
           end
           options[:host] ||= "127.0.0.1"
           options[:port] = (options[:port] || 6379).to_i
