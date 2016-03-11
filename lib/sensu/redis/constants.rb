@@ -51,16 +51,11 @@ module Sensu
       "incr"
     ].freeze
 
-    # Redis DB select command.
-    SELECT_COMMAND = "select".freeze
-
-    # Redis authentication command.
+    # Redis commands.
     AUTH_COMMAND = "auth".freeze
-
-    # Redis PubSub subscribe command.
+    SELECT_COMMAND = "select".freeze
+    INFO_COMMAND = "info".freeze
     SUBSCRIBE_COMMAND = "subscribe".freeze
-
-    # Redis PubSub unsubscribe command.
     UNSUBSCRIBE_COMMAND = "unsubscribe".freeze
 
     # Boolean Redis response value processor.
@@ -68,6 +63,7 @@ module Sensu
 
     # Redis response value processors.
     RESPONSE_PROCESSORS = {
+      "auth" => BOOLEAN_PROCESSOR,
       "exists" => BOOLEAN_PROCESSOR,
       "hexists" => BOOLEAN_PROCESSOR,
       "sismember" => BOOLEAN_PROCESSOR,
