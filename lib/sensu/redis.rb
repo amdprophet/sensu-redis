@@ -1,5 +1,4 @@
 require "rubygems"
-require "sensu/redis/version"
 require "sensu/redis/parser"
 require "sensu/redis/processor"
 require "sensu/redis/commands"
