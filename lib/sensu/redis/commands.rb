@@ -57,7 +57,7 @@ module Sensu
         @callbacks = []
         send_command(AUTH_COMMAND, password) if password
         send_command(SELECT_COMMAND, db) if db
-        callbacks.each { |block| callback &block }
+        callbacks.each { |block| callback(&block) }
       end
 
       # Subscribe to a Redis PubSub channel.

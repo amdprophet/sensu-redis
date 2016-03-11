@@ -22,27 +22,38 @@ module Sensu
         }
       end
 
+      # Set the on error callback.
       def on_error(&block)
         @error_callback = block
       end
 
+      # Set the before reconnect callback.
       def before_reconnect(&block)
         @reconnect_callbacks[:before] = block
       end
 
+      # Set the after reconnect callback.
       def after_reconnect(&block)
         @reconnect_callbacks[:after] = block
       end
 
+      # Create an error and pass it to the error callback.
+      #
+      # @param klass [Class]
+      # @param message [String]
       def error(klass, message)
         redis_error = klass.new(message)
         @error_callback.call(redis_error)
       end
 
+      # Determine if connected to Redis.
       def connected?
         @connected || false
       end
 
+      # Reconnect to Redis. The before reconnect callback is first
+      # call if not already reconnecting. This method uses a 1 second
+      # delay before attempting a reconnect.
       def reconnect!
         @reconnect_callbacks[:before].call unless @reconnecting
         @reconnecting = true
@@ -51,11 +62,15 @@ module Sensu
         end
       end
 
+      # Close the Redis connection after writing the current
+      # command/data.
       def close
         @closing = true
         close_connection_after_writing
       end
 
+      # Called by EM when the connection closes, either intentionally
+      # or unexpectedly.
       def unbind
         @deferred_status = nil
         @response_callbacks = []
@@ -72,6 +87,9 @@ module Sensu
         @connected = false
       end
 
+      # Validate the connection, ensuring that the Redis release
+      # supports Sensu's required Redis commands. A connection error
+      # is thrown if Redis's version does not meet the requirement.
       def validate_connection!
         info do |redis_info|
           if redis_info[:redis_version] < "1.3.14"
@@ -80,6 +98,7 @@ module Sensu
         end
       end
 
+      # Called by EM when the connection is established.
       def connection_completed
         @connected = true
         auth_and_select_db(@password, @db)

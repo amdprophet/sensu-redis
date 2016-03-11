@@ -25,9 +25,31 @@ module Sensu
     # Redis commands that are supported by this library.
     REDIS_COMMANDS = [
       "set",
+      "setnx",
       "get",
+      "getset",
       "del",
-      "info"
+      "info",
+      "sadd",
+      "smembers",
+      "sismembers",
+      "srem",
+      "scard",
+      "hset",
+      "hsetnx",
+      "hget",
+      "hgetall",
+      "hdel",
+      "hincrby",
+      "rpush",
+      "lpush",
+      "ltrim",
+      "lrange",
+      "exists",
+      "ttl",
+      "expire",
+      "flushdb",
+      "incr"
     ].freeze
 
     # Redis DB select command.
