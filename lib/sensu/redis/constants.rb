@@ -44,6 +44,7 @@ module Sensu
       "lrange",
       "llen",
       "exists",
+      "hexists",
       "ttl",
       "expire",
       "flushdb",
@@ -68,6 +69,7 @@ module Sensu
     # Redis response value processors.
     RESPONSE_PROCESSORS = {
       "exists" => BOOLEAN_PROCESSOR,
+      "hexists" => BOOLEAN_PROCESSOR,
       "sismember" => BOOLEAN_PROCESSOR,
       "sadd" => BOOLEAN_PROCESSOR,
       "srem" => BOOLEAN_PROCESSOR,
