@@ -32,7 +32,7 @@ module Sensu
       "info",
       "sadd",
       "smembers",
-      "sismembers",
+      "sismember",
       "srem",
       "scard",
       "hset",
