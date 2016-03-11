@@ -26,11 +26,7 @@ module Sensu
           value = value.to_s
           command << "$#{get_size(value)}#{DELIM}#{value}#{DELIM}"
         end
-        if @deferred_status
-          send_data(command)
-        else
-          callback { send_data(command) }
-        end
+        callback { send_data(command) }
       end
 
       # Create Redis command methods. Command methods just wrap
