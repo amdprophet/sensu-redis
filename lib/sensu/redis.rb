@@ -1,5 +1,6 @@
 require "rubygems"
 require "sensu/redis/client"
+require "sensu/redis/sentinel"
 require "eventmachine"
 require "uri"
 
@@ -19,16 +20,36 @@ module Sensu
         end
       end
 
-      def connect(options={})
+      def connect_via_sentinel(options, &block)
+        sentinel = Sentinel.new(options)
+        sentinel.callback do
+          sentinel.resolve do |host, port|
+            block.call(EM.connect(host, port, Client, options))
+          end
+        end
+        sentinel.errback do
+          EM::Timer.new(3) do
+            connect_via_sentinel(options, &block)
+          end
+        end
+      end
+
+      def connect_direct(options, &block)
+        block.call(EM.connect(options[:host], options[:port], Client, options))
+      end
+
+      def connect(options={}, &block)
         case options
         when String
           options = parse_url(options)
         when nil
           options = {}
         end
-        options[:host] ||= "127.0.0.1"
-        options[:port] = (options[:port] || 6379).to_i
-        EM.connect(options[:host], options[:port], Sensu::Redis::Client, options)
+        if options[:sentinels].is_a?(Array)
+          connect_via_sentinel(options, &block)
+        else
+          connect_direct(options, &block)
+        end
       end
     end
   end

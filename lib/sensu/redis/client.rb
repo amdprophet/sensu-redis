@@ -11,9 +11,9 @@ module Sensu
       # and setting the default connection options and callbacks.
       def initialize(options={})
         create_command_methods!
-        @host = options[:host]
-        @port = options[:port]
-        @db = (options[:db] || 0).to_i
+        @host = options[:host] || "127.0.0.1"
+        @port = options[:port] || 6379
+        @db = options[:db]
         @password = options[:password]
         @auto_reconnect = options.fetch(:auto_reconnect, true)
         @reconnect_on_error = options.fetch(:reconnect_on_error, true)
