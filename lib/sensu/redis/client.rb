@@ -7,6 +7,8 @@ module Sensu
     class Client < EM::Connection
       include EM::Deferrable
 
+      attr_accessor :sentinel
+
       # Initialize the connection, creating the Redis command methods,
       # and setting the default connection options and callbacks.
       def initialize(options={})
@@ -17,13 +19,26 @@ module Sensu
         @password = options[:password]
         @auto_reconnect = options.fetch(:auto_reconnect, true)
         @reconnect_on_error = options.fetch(:reconnect_on_error, true)
-        @error_callback = lambda do |error|
-          raise(error)
-        end
+        @error_callback = Proc.new {}
         @reconnect_callbacks = {
-          :before => lambda {},
-          :after => lambda {}
+          :before => Proc.new {},
+          :after => Proc.new {}
         }
+      end
+
+      # Determine the current Redis master address. If Sentinel was
+      # used to determine the original address, use it again. If
+      # Sentinel is not being used, return the host and port used when
+      # the connection was first established.
+      #
+      # @yield callback called when the current Redis master host and
+      #   port has been determined.
+      def determine_address(&block)
+        if @sentinel
+          @sentinel.resolve(&block)
+        else
+          block.call(@host, @port)
+        end
       end
 
       # Set the connection error callback. This callback is called
@@ -68,7 +83,9 @@ module Sensu
         @reconnect_callbacks[:before].call unless @reconnecting
         @reconnecting = true
         EM.add_timer(1) do
-          reconnect(@host, @port)
+          determine_address do |host, port|
+            reconnect(host, port)
+          end
         end
       end
 
@@ -107,7 +124,7 @@ module Sensu
       # Send a Redis command using RESP multi bulk. This method sends
       # data to Redis using EM connection `send_data()`.
       #
-      # @params [Array<Object>] *arguments
+      # @param [Array<Object>] *arguments
       def send_command_data(*arguments)
         data = "*#{arguments.size}#{DELIM}"
         arguments.each do |value|
@@ -121,8 +138,8 @@ module Sensu
       # callback. This method calls `send_command_data()` for RESP
       # multi bulk and transmission.
       #
-      # @params command [String]
-      # @params [Array<Object>] *arguments
+      # @param command [String]
+      # @param [Array<Object>] *arguments
       # @yield command reponse callback
       def send_command(command, *arguments, &block)
         send_command_data(command, *arguments)
@@ -132,8 +149,8 @@ module Sensu
       # Send a Redis command once the Redis connection has been
       # established (EM Deferable succeeded).
       #
-      # @params command [String]
-      # @params [Array<Object>] *arguments
+      # @param command [String]
+      # @param [Array<Object>] *arguments
       # @yield command reponse callback
       def redis_command(command, *arguments, &block)
         if @deferred_status == :succeeded
