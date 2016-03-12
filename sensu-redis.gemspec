@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "sensu-redis"
-  spec.version       = "0.1.12"
+  spec.version       = "0.1.13"
   spec.authors       = ["Sean Porter"]
   spec.email         = ["portertech@gmail.com"]
   spec.summary       = "The Sensu Redis client library"
