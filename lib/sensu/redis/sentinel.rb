@@ -82,6 +82,10 @@ module Sensu
               end
             end
           end
+          sentinel.errback do
+            retry_resolve(&block)
+          end
+          sentinel.timeout(10)
         end
       end
     end
