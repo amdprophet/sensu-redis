@@ -77,7 +77,7 @@ module Sensu
           sentinel.callback do
             sentinel.send_command("sentinel", "get-master-addr-by-name", @master) do |host, port|
               if host && port
-                block.call(host, port)
+                block.call(host, port.to_i)
               else
                 retry_resolve(&block)
               end

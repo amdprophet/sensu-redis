@@ -8,3 +8,4 @@
 /spec/reports/
 /tmp/
 dump.rdb
+sentinel.conf

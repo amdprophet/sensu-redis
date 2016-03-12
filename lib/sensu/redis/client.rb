@@ -175,7 +175,7 @@ module Sensu
       # Subscribe to a Redis PubSub channel.
       #
       # @param channel [String]
-      # @yield channel message callback
+      # @yield channel message callback.
       def subscribe(channel, &block)
         @pubsub_callbacks ||= Hash.new([])
         @pubsub_callbacks[channel] << block
@@ -188,7 +188,7 @@ module Sensu
       # Redis PubSub channels.
       #
       # @param channel [String]
-      # @yield unsubscribe callback
+      # @yield unsubscribe callback.
       def unsubscribe(channel=nil, &block)
         @pubsub_callbacks ||= Hash.new([])
         arguments = [UNSUBSCRIBE_COMMAND]
