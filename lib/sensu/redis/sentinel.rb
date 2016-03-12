@@ -22,11 +22,12 @@ module Sensu
       # set the deferrable status to `:successful`, triggering any
       # queued Sentinel callback calls (e.g. `resolve()`).
       #
-      # @param host [String]
-      # @param port [Integer]
+      # @param options [Hash] containing the host and port.
       # @return [Object] Sentinel connection.
-      def connect_to_sentinel(host, port)
-        connection = EM.connect(host, port, Client)
+      def connect_to_sentinel(options={})
+        options[:host] ||= "127.0.0.1"
+        options[:port] ||= 26379
+        connection = EM.connect(options[:host], options[:port], Client, options)
         connection.callback do
           succeed
         end
@@ -39,10 +40,8 @@ module Sensu
       # @param sentinels [Array]
       # @return [Array] of Sentinel connection objects.
       def connect_to_sentinels(sentinels)
-        sentinels.map do |sentinel|
-          host = sentinel[:host] || "127.0.0.1"
-          port = sentinel[:port] || 26379
-          connect_to_sentinel(host, port)
+        sentinels.map do |options|
+          connect_to_sentinel(options)
         end
       end
 
