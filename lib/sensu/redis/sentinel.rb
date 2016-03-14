@@ -4,8 +4,6 @@ require "eventmachine"
 module Sensu
   module Redis
     class Sentinel
-      include EM::Deferrable
-
       # Initialize the Sentinel connections. The default Redis master
       # name is "mymaster", which is the same name that the Sensu HA
       # Redis documentation uses. The master name must be set
@@ -18,20 +16,14 @@ module Sensu
         @sentinels = connect_to_sentinels(options[:sentinels])
       end
 
-      # Connect to a Sentinel instance. A successful connection will
-      # set the deferrable status to `:successful`, triggering any
-      # queued Sentinel callback calls (e.g. `resolve()`).
+      # Connect to a Sentinel instance.
       #
       # @param options [Hash] containing the host and port.
       # @return [Object] Sentinel connection.
       def connect_to_sentinel(options={})
         options[:host] ||= "127.0.0.1"
         options[:port] ||= 26379
-        connection = EM.connect(options[:host], options[:port], Client, options)
-        connection.callback do
-          succeed
-        end
-        connection
+        EM.connect(options[:host], options[:port], Client, options)
       end
 
       # Connect to all Sentinel instances. This method defaults the
@@ -85,7 +77,7 @@ module Sensu
           sentinel.errback do
             retry_resolve(&block)
           end
-          sentinel.timeout(10)
+          sentinel.timeout(60)
         end
       end
     end

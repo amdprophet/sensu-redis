@@ -32,12 +32,10 @@ module Sensu
       # @yield callback to be called with the redis connection object.
       def connect_via_sentinel(options, &block)
         sentinel = Sentinel.new(options)
-        sentinel.callback do
-          sentinel.resolve do |host, port|
-            redis = EM.connect(host, port, Client, options)
-            redis.sentinel = sentinel
-            block.call(redis)
-          end
+        sentinel.resolve do |host, port|
+          redis = EM.connect(host, port, Client, options)
+          redis.sentinel = sentinel
+          block.call(redis)
         end
       end
 
@@ -63,7 +61,7 @@ module Sensu
         end
         options[:host] ||= "127.0.0.1"
         options[:port] ||= 6379
-        if options[:sentinels].is_a?(Array)
+        if options[:sentinels].is_a?(Array) && options[:sentinels].size > 0
           connect_via_sentinel(options, &block)
         else
           connect_direct(options, &block)
