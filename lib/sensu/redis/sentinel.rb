@@ -66,6 +66,7 @@ module Sensu
       def create_resolve_timeout(sentinel, seconds, &block)
         EM::Timer.new(seconds) do
           sentinel.fail
+          sentinel.succeed
           retry_resolve(&block)
         end
       end
