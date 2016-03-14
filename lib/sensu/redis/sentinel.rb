@@ -55,6 +55,21 @@ module Sensu
         end
       end
 
+
+      # Create a Sentinel master resolve timeout, causing the previous
+      # attempt to fail/cancel, while beginning another attempt.
+      #
+      # @param sentinel [Object] connection.
+      # @param seconds [Integer] before timeout.
+      # @yield callback called when Sentinel resolves the current
+      #   Redis master address (host & port).
+      def create_resolve_timeout(sentinel, seconds, &block)
+        EM::Timer.new(seconds) do
+          sentinel.fail
+          retry_resolve(&block)
+        end
+      end
+
       # Resolve the current Redis master via Sentinel. The correct
       # Redis master name is required for this method to work.
       #
@@ -65,19 +80,15 @@ module Sensu
         if sentinel.nil?
           retry_resolve(&block)
         else
-          sentinel.callback do
-            sentinel.send_command("sentinel", "get-master-addr-by-name", @master) do |host, port|
-              if host && port
-                block.call(host, port.to_i)
-              else
-                retry_resolve(&block)
-              end
+          timeout = create_resolve_timeout(sentinel, 10, &block)
+          sentinel.redis_command("sentinel", "get-master-addr-by-name", @master) do |host, port|
+            timeout.cancel
+            if host && port
+              block.call(host, port.to_i)
+            else
+              retry_resolve(&block)
             end
           end
-          sentinel.errback do
-            retry_resolve(&block)
-          end
-          sentinel.timeout(60)
         end
       end
     end
