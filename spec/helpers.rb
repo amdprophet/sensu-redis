@@ -1,5 +1,6 @@
 require "rspec"
 require "eventmachine"
+require "sensu/redis/client"
 
 unless RUBY_VERSION < "1.9" || RUBY_PLATFORM =~ /java/
   require "codeclimate-test-reporter"
@@ -25,5 +26,9 @@ module Helpers
 
   def async_done
     EM.stop_event_loop
+  end
+
+  def redis
+    @redis ||= EM.connect("127.0.0.1", 6379, Sensu::Redis::Client)
   end
 end
