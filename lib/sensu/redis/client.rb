@@ -113,23 +113,15 @@ module Sensu
         @connected = false
       end
 
-      # Determine the byte size of a string.
-      #
-      # @param string [String]
-      # @return [Integer] string byte size.
-      def get_size(string)
-        string.respond_to?(:bytesize) ? string.bytesize : string.size
-      end
-
       # Send a Redis command using RESP multi bulk. This method sends
       # data to Redis using EM connection `send_data()`.
       #
       # @param [Array<Object>] *arguments
       def send_command_data(*arguments)
-        data = "*#{arguments.size}#{DELIM}"
+        data = "*#{arguments.length}#{DELIM}"
         arguments.each do |value|
           value = value.to_s
-          data << "$#{get_size(value)}#{DELIM}#{value}#{DELIM}"
+          data << "$#{value.bytesize}#{DELIM}#{value}#{DELIM}"
         end
         send_data(data)
       end
@@ -325,7 +317,7 @@ module Sensu
       # You can read about RESP @ http://redis.io/topics/protocol
       #
       # @param line [String]
-      def parse_resp_line(line)
+      def parse_response_line(line)
         # Trim off the response type and delimiter (\r\n).
         response = line.slice(1..-3)
         # First character indicates response type.
@@ -335,11 +327,11 @@ module Sensu
         when PLUS # String, e.g. +OK
           dispatch_response(response)
         when DOLLAR # Bulk string, e.g. $3\r\nfoo\r\n
-          response_size = Integer(response)
-          if response_size == -1 # No data, return nil.
+          response_length = Integer(response)
+          if response_length == -1 # No data, return nil.
             dispatch_response(nil)
-          elsif @buffer.size >= response_size + 2 # Complete data.
-            dispatch_response(@buffer.slice!(0, response_size))
+          elsif @buffer.length >= response_length + 2 # Complete data.
+            dispatch_response(@buffer.slice!(0, response_length))
             @buffer.slice!(0,2) # Discard delimeter (\r\n).
           else # Incomplete, have data pushed back into buffer.
             return INCOMPLETE
@@ -367,7 +359,7 @@ module Sensu
         (@buffer ||= '') << data
         while index = @buffer.index(DELIM)
           line = @buffer.slice!(0, index+2)
-          if parse_resp_line(line) == INCOMPLETE
+          if parse_response_line(line) == INCOMPLETE
             @buffer[0...0] = line
             break
           end
