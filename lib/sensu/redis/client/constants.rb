@@ -50,7 +50,8 @@ module Sensu
       "flushdb",
       "incr",
       "multi",
-      "exec"
+      "exec",
+      "publish"
     ].freeze
 
     # Redis commands.

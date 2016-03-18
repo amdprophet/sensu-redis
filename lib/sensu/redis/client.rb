@@ -7,7 +7,7 @@ module Sensu
     class Client < EM::Connection
       include EM::Deferrable
 
-      attr_accessor :sentinel
+      attr_accessor :sentinel, :auto_reconnect, :reconnect_on_error
 
       # Initialize the connection, creating the Redis command methods,
       # and setting the default connection options and callbacks.
