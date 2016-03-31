@@ -40,6 +40,7 @@ module Sensu
       "hincrby",
       "rpush",
       "lpush",
+      "rpop",
       "blpop",
       "ltrim",
       "lrange",
