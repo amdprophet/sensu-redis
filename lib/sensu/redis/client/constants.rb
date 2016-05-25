@@ -26,6 +26,7 @@ module Sensu
       "get",
       "getset",
       "del",
+      "mget",
       "info",
       "sadd",
       "smembers",
