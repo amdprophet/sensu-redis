@@ -45,7 +45,13 @@ module Sensu
       # @param options [Hash]
       # @yield callback to be called with the redis connection object.
       def connect_direct(options, &block)
-        block.call(EM.connect(options[:host], options[:port], Client, options))
+        connection = EM.connect(options[:host], options[:port], Client, options)
+        connect_timer = EM::PeriodicTimer.new(1) do
+          if connection.connected?
+            connect_timer.cancel
+            block.call(connection)
+          end
+        end
       end
 
       # Connect to Redis using the provided connection options.
