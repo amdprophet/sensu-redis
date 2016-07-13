@@ -21,6 +21,7 @@ module Sensu
 
     # Redis commands that are supported by this library.
     COMMANDS = [
+      "ping",
       "set",
       "setnx",
       "get",
