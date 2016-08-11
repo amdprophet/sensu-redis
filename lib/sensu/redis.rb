@@ -61,7 +61,11 @@ module Sensu
         end
         options[:host] ||= "127.0.0.1"
         options[:port] ||= 6379
-        if options[:sentinels].is_a?(Array) && options[:sentinels].length > 0
+        case
+        when options[:sentinels].is_a?(String)
+          raw_urls = options[:sentinels]
+          options[:sentinels] = raw_urls.split(',').map { |url| parse_url(url) }
+        when options[:sentinels].is_a?(Array) && options[:sentinels].length > 0
           connect_via_sentinel(options, &block)
         else
           connect_direct(options, &block)
