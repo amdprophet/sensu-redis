@@ -25,4 +25,15 @@ describe "Sensu::Redis" do
       end
     end
   end
+
+  it "can connect to a redis master via comma-separated sentinel URL string", :sentinel => true do
+    async_wrapper do
+      Sensu::Redis.connect(:sentinels => "redis://127.0.0.1:26379,redis://127.0.0.1:26379") do |redis|
+        redis.callback do
+          expect(redis.connected?).to eq(true)
+          async_done
+        end
+      end
+    end
+  end
 end
