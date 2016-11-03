@@ -15,6 +15,17 @@ describe "Sensu::Redis" do
     end
   end
 
+  it "can connect to a redis instance with a hostname" do
+    async_wrapper do
+      Sensu::Redis.connect(:host => "localhost") do |redis|
+        redis.callback do
+          expect(redis.connected?).to eq(true)
+          async_done
+        end
+      end
+    end
+  end
+
   it "can connect to a redis master via sentinel", :sentinel => true do
     async_wrapper do
       Sensu::Redis.connect(:sentinels => [{:port => 26379}]) do |redis|

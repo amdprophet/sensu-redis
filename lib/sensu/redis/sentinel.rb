@@ -55,7 +55,6 @@ module Sensu
         end
       end
 
-
       # Create a Sentinel master resolve timeout, causing the previous
       # attempt to fail/cancel, while beginning another attempt.
       #
