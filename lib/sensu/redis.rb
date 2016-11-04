@@ -56,7 +56,8 @@ module Sensu
       # address. Resolving the hostname upfront guards against lookup
       # failures that would cause the Sensu process to crash. Upfront
       # hostname resolution also allows this Redis library to work
-      # with Amazon AWS ElastiCache.
+      # with Amazon AWS ElastiCache & where DNS is used as a failover
+      # mechanism.
       #
       # @param options [Hash]
       # @yield callback to be called with the redis connection object.
