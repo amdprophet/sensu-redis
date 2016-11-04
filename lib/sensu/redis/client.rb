@@ -1,13 +1,15 @@
 require "sensu/redis/client/constants"
 require "sensu/redis/client/errors"
+require "sensu/redis/utilities"
 require "eventmachine"
 
 module Sensu
   module Redis
     class Client < EM::Connection
       include EM::Deferrable
+      include Utilities
 
-      attr_accessor :sentinel, :auto_reconnect, :reconnect_on_error
+      attr_accessor :logger, :sentinel, :auto_reconnect, :reconnect_on_error
 
       # Initialize the connection, creating the Redis command methods,
       # and setting the default connection options and callbacks.
@@ -81,13 +83,28 @@ module Sensu
 
       # Reconnect to Redis. The before reconnect callback is first
       # called if not already reconnecting. This method uses a 1
-      # second delay before attempting a reconnect.
+      # second delay before attempting a reconnect. The method
+      # `determine_address()` is used to determine the correct host
+      # and port to reconnect to, either via Sentinel (new master) or
+      # the previous host and port. This method uses `resolve_host()`
+      # to first resolve the determined host, if it's not already an
+      # IP address. Resolving the hostname upfront guards against
+      # lookup failures that would cause the Sensu process to crash.
+      # Upfront hostname resolution also allows this Redis library to
+      # work with Amazon AWS ElastiCache & where DNS is used as a
+      # failover mechanism.
       def reconnect!
         @reconnect_callbacks[:before].call unless @reconnecting
         @reconnecting = true
         EM.add_timer(1) do
           determine_address do |host, port|
-            reconnect(host, port)
+            resolve_host(host) do |ip_address|
+              if ip_address.nil?
+                reconnect!
+              else
+                reconnect(ip_address, port)
+              end
+            end
           end
         end
       end

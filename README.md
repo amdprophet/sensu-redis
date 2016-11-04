@@ -2,9 +2,6 @@
 
 [![Build Status](https://travis-ci.org/sensu/sensu-redis.svg?branch=master)](https://travis-ci.org/sensu/sensu-redis)
 
-[![Code Climate](https://codeclimate.com/github/sensu/sensu-redis.png)](https://codeclimate.com/github/sensu/sensu-redis)
-[![Code Climate Coverage](https://codeclimate.com/github/sensu/sensu-redis/coverage.png)](https://codeclimate.com/github/sensu/sensu-redis)
-
 ## Installation
 
 Add this line to your application's Gemfile:
