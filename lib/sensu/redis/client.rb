@@ -121,6 +121,7 @@ module Sensu
       # starting the reconnect process when appropriate.
       def unbind
         @deferred_status = nil
+        @pubsub_callbacks = nil
         if @closing
           @reconnecting = false
         elsif ((@connected || @reconnecting) && @auto_reconnect) || @reconnect_on_error
