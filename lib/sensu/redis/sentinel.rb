@@ -12,7 +12,7 @@ module Sensu
       # @param options [Hash] containing the standard Redis
       #   connection settings.
       def initialize(options={})
-        @master = options[:master] || "mymaster"
+        @master = options[:master_group] || options[:master] || "mymaster"
         @sentinels = connect_to_sentinels(options[:sentinels])
       end
 
