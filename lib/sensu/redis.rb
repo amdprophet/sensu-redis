@@ -42,6 +42,7 @@ module Sensu
       # @yield callback to be called with the redis connection object.
       def connect_via_sentinel(options, &block)
         sentinel = Sentinel.new(options)
+        sentinel.logger = @logger
         sentinel.resolve do |host, port|
           redis = EM.connect(host, port, Client, options)
           redis.logger = @logger

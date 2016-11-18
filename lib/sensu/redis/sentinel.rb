@@ -4,6 +4,8 @@ require "eventmachine"
 module Sensu
   module Redis
     class Sentinel
+      attr_accessor :logger
+
       # Initialize the Sentinel connections. The default Redis master
       # name is "mymaster", which is the same name that the Sensu HA
       # Redis documentation uses. The master name must be set
@@ -78,14 +80,30 @@ module Sensu
       def resolve(&block)
         sentinel = select_a_sentinel
         if sentinel.nil?
+          if @logger
+            @logger.debug("unable to determine redis master", {
+              :reason => "not connected to a redis sentinel"
+            })
+            @logger.debug("retrying redis master resolution via redis sentinel")
+          end
           retry_resolve(&block)
         else
           timeout = create_resolve_timeout(sentinel, 10, &block)
           sentinel.redis_command("sentinel", "get-master-addr-by-name", @master) do |host, port|
             timeout.cancel
             if host && port
+              @logger.debug("redis master resolved via redis sentinel", {
+                :host => host,
+                :port => port.to_i
+              }) if @logger
               block.call(host, port.to_i)
             else
+              if @logger
+                @logger.debug("unable to determine redis master", {
+                  :reason => "redis sentinel did not return a redis master host and port"
+                })
+                @logger.debug("retrying redis master resolution via redis sentinel")
+              end
               retry_resolve(&block)
             end
           end
