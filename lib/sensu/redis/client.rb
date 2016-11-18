@@ -121,6 +121,7 @@ module Sensu
       # starting the reconnect process when appropriate.
       def unbind
         @deferred_status = nil
+        @pubsub_callbacks = nil
         if @closing
           @reconnecting = false
         elsif ((@connected || @reconnecting) && @auto_reconnect) || @reconnect_on_error
@@ -189,7 +190,8 @@ module Sensu
       # @param channel [String]
       # @yield channel message callback.
       def subscribe(channel, &block)
-        @pubsub_callbacks ||= Hash.new([])
+        @pubsub_callbacks ||= {}
+        @pubsub_callbacks[channel] ||= []
         @pubsub_callbacks[channel] << block
         redis_command(SUBSCRIBE_COMMAND, channel, &block)
       end
@@ -202,7 +204,7 @@ module Sensu
       # @param channel [String]
       # @yield unsubscribe callback.
       def unsubscribe(channel=nil, &block)
-        @pubsub_callbacks ||= Hash.new([])
+        @pubsub_callbacks ||= {}
         arguments = [UNSUBSCRIBE_COMMAND]
         if channel
           @pubsub_callbacks[channel] = [block]
